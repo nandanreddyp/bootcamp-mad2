@@ -27,5 +27,7 @@ class Authentication(Resource):
     
 api.add_resource(Authentication, '/api/auth')
 
+
+
 if __name__ == '__main__':
     app.run(debug=True)
