@@ -1,33 +1,25 @@
 from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
 
-from flask_restful import Api, Resource
-
 app = Flask(__name__)
-api = Api(app)
+app.config['SECRET_KEY'] = 'your_secret_key'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 CORS(app)
 
-class Authentication(Resource):
-    def get(self):
-        # Check if the user exists
-        return jsonify({"message": "GET Registration"})
+# initialize the database
+from models import db
+db.init_app(app)
 
-    def post(self):
-        # Creates a new user
-        return jsonify({"message": "POST Registration"})
+# add the api routes
+from controllers import Api, Authentication, Users
+api = Api(app)
 
-    def put(self):
-        # Updates the user
-        return jsonify({"message": "PUT Registration"})
-
-    def delete(self):
-        # Deletes the user
-        return jsonify({"message": "DELETE Registration"})
-    
 api.add_resource(Authentication, '/api/auth')
-
-
+api.add_resource(Users, '/api/users', '/api/users/<int:user_id>')
 
 if __name__ == '__main__':
+    with app.app_context():
+        db.create_all()  # Create database tables
     app.run(debug=True)
