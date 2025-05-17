@@ -10,7 +10,7 @@ class User(db.Model):
     role = db.Column(db.String(50), nullable=False, default='user')
 
     def __repr__(self):
-        return f'<User {self.username}>'
+        return f'<User {self.name}>'
     
     def to_dict(self):
         return {

@@ -1,9 +1,39 @@
+from functools import wraps
+
 from flask import Flask, request, jsonify, render_template
 from flask_restful import Api, Resource
 
+from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_required
+
 from models import db, User
 
+def is_admin():
+    try:
+        current_user = User.query.get(get_jwt_identity())
+        if current_user.role != 'admin':
+            return False
+        return True
+    except Exception as e:
+        print(f"Error checking admin status: {e}")
+        return False
+    
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        try:
+            current_user = User.query.get(get_jwt_identity())
+            if current_user.role != 'admin':
+                return {"message": "Access denied"}, 403
+        except Exception as e:
+            print(f"Error checking admin status: {e}")
+            return {"message": "Access denied"}, 403
+        return f(*args, **kwargs)
+    return decorated_function
+
 class Users(Resource):
+
+    @jwt_required()
+    @admin_required
     def get(self, user_id=None):
         if user_id: # Get user by ID
             user = User.query.get(user_id)
@@ -14,6 +44,7 @@ class Users(Resource):
             users = User.query.all()
             return jsonify({"message": "All users", "users": [user.to_dict() for user in users]})
 
+    @admin_required
     def put(self, user_id): # edit user
         try:
             print(user_id)
@@ -70,8 +101,14 @@ class Authentication(Resource):
             return {"message": "Error creating user", "error": str(e)}, 500
 
     def put(self): # login
-        # Updates the user
-        return jsonify({"message": "PUT Registration"})
+        email = request.json.get('email')
+        password = request.json.get('password')
+        user = User.query.filter_by(email=email, password=password).first()
+        if user:
+            access_token = create_access_token(identity=user.id)
+            return {"message": "Login successful", "access_token": access_token}, 200
+        else:
+            return {"message": "Invalid credentials"}, 401
 
     def delete(self): # logout
         # Deletes the user
