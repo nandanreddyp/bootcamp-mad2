@@ -94,7 +94,7 @@ class Authentication(Resource):
             )
             db.session.add(user)
             db.session.commit()
-            return {"message": "User created", "user": user.to_dict()}, 201
+            return {"message": "Account Created, Login to continue!", "user": user.to_dict()}, 201
         except Exception as e:
             db.session.rollback()
             print(f"Error creating user: {e}")
@@ -106,7 +106,8 @@ class Authentication(Resource):
         user = User.query.filter_by(email=email, password=password).first()
         if user:
             access_token = create_access_token(identity=user.id)
-            return {"message": "Login successful", "access_token": access_token}, 200
+            user = user.to_dict()
+            return {"message": "Login successful", "access_token": access_token, "user": user}, 200
         else:
             return {"message": "Invalid credentials"}, 401
 

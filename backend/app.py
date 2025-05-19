@@ -21,11 +21,6 @@ CORS(app)
 from models import db, User
 db.init_app(app)
 
-# starting point for the web application
-@app.route('/')
-def index():
-    return render_template('index.html')
-
 # add the api routes
 from controllers import Api, Authentication, Users
 api = Api(app)
