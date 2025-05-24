@@ -7,6 +7,11 @@ from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_requir
 
 from models import db, User, Quote
 
+from flask_caching import Cache
+
+cache = Cache(config={'CACHE_TYPE': 'SimpleCache', 'CACHE_DEFAULT_TIMEOUT': 300})
+
+
 def is_admin():
     try:
         current_user = User.query.get(get_jwt_identity())
@@ -118,13 +123,17 @@ class Authentication(Resource):
 class Quotes(Resource):
 
     @jwt_required()
+    @cache.cached(timeout=60, key_prefix='quotes', query_string=True)
     def get(self, quote_id=None):
         if quote_id:
             quote = Quote.query.get(quote_id)
             if not quote:
                 return {"message": "Quote not found"}, 404
             return {"message": "Quote found", "quote": quote.to_dict()}
+        import time
         quotes = Quote.query.all()
+        # suppose there are so many quotes then it will take time to fetch all quotes
+        time.sleep(12)  # Simulating delay for demonstration
         quotes = [quote.to_dict() for quote in quotes]
         return {"message": "GET Quotes", "quotes": quotes}
     
@@ -135,6 +144,7 @@ class Quotes(Resource):
         quote = Quote(text=text)
         db.session.add(quote)
         db.session.commit()
+        cache.delete('quotes')
         return {"message": "Quote created", "quote": quote.to_dict()}
     
     @jwt_required()
@@ -148,6 +158,7 @@ class Quotes(Resource):
         text = request.json.get('text', "No text provided")
         quote.text = text
         db.session.commit()
+        cache.delete('quotes')
         return {"message": "Quote updated", "quote": quote.to_dict()}
     
     @jwt_required()
@@ -160,6 +171,7 @@ class Quotes(Resource):
             return {"message": "Quote not found with given id"}, 404
         db.session.delete(quote)
         db.session.commit()
+        cache.delete('quotes')
         return {"message": "Quote deleted"}, 200
 
 
@@ -169,5 +181,5 @@ class ExportCSV(Resource):
     def get(self):
         from celery_app import export_csv
         task = export_csv.delay()
-        return {"message": "CSV export initiated"}, 200
+        return {"message": "CSV export initiated, we will send you a mail!"}, 200
 

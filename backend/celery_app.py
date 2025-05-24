@@ -37,10 +37,12 @@ def monthly_reminders():
 @celery.task()
 def export_csv():
     with app.app_context():
-        users = User.query.all()
-        for user in users:
-            # generate user's data to export to csv
-            send_export_job_result(user.email, data=None)
+        user = User.query.filter_by(email='admin@gmail.com').first()
+        from time import sleep
+        for i in range(5):
+            sleep(3)
+            print(f"Exporting CSV... {i+1}/5")
+        send_export_job_result(user.email, data=None)
     return "Export job result sent successfully."
 
 # scheduled tasks
@@ -50,12 +52,13 @@ from datetime import timedelta
 celery.conf.beat_schedule = {
     'daily_reminders': {
         'task': 'celery_app.daily_reminders',
-        'schedule': crontab(hour=12, minute=33),
+        'schedule': crontab(hour=19, minute=21),
         # 'schedule': timedelta(seconds=10),
     },
     'monthly_reminders': {
         'task': 'celery_app.monthly_reminders',
-        'schedule': crontab(0, 0, day_of_month='1'),
+        # 'schedule': crontab(0, 0, day_of_month='1'),
+        'schedule': crontab(hour=19, minute=21, day_of_month='24'),
         # 'schedule': timedelta(seconds=3),
     }
 }

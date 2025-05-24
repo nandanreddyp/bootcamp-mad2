@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
+from datetime import timedelta
 
 from flask_jwt_extended import JWTManager
 
@@ -9,9 +10,15 @@ app.config['SECRET_KEY'] = 'your_secret_key'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
+# configure caching
+from controllers import cache
+cache.init_app(app)
+
+
 # configure JWT
 app.config['JWT_SECRET_KEY'] = 'your_jwt_secret_key'
 app.config['JWT_VERIFY_SUB'] = False
+app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(minutes=15)
 jwt = JWTManager(app)
 
 # enable CORS for all routes
