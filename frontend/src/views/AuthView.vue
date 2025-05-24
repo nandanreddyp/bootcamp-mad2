@@ -79,8 +79,11 @@ export default {
             this.message = data.message;
             localStorage.setItem('token', data.access_token);
             localStorage.setItem('user', JSON.stringify(data.user));
-            this.$router.push('/');
-            window.location.reload();
+            if (data.user.role === 'admin') {
+                this.$router.push('/admin');
+            } else {
+                this.$router.push('/');
+            }
         })
     },
     registerUser() {

@@ -1,18 +1,42 @@
-# bootcamp-mad2
+# Bootcamp-MAD2
 
+## How to Run the Project
 
-## How to run the project
+### Backend (Flask)
 
+```bash
+cd backend
+pip install -r requirements.txt
+python app.py
+```
 
-## About the project
+### Frontend (Vite)
 
-1. Two user application, one for the admin and one for the user.
-2. User can create a new account and login.
-3. User can create a new post and view all posts.
-4. Admin can see all the posts and download CSV.
-5. Admin can see statistics of the posts.
+```bash
+cd frontend
+npm install
+npm run dev
+```
 
-Additional features:
-Caching
-Asynchronous tasks like csv generation
-Timed tasks like sending mails on a specific time
+### ⚙️ Celery (Asynchronous Tasks)
+
+> Make sure **Redis** is running on `localhost:6379` and mailhog is running on `localhost:8025`.
+
+#### Start Celery Worker
+
+```bash
+cd backend
+# Linux/macOS
+celery -A celery_app.celery worker --loglevel=info
+
+# Windows (must use solo pool)
+celery -A celery_app.celery worker --loglevel=info --pool=solo
+```
+
+#### Start Celery Beat Scheduler
+
+```bash
+cd backend
+celery -A celery_app.celery beat --loglevel=info
+```
+

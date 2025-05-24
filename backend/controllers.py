@@ -5,7 +5,7 @@ from flask_restful import Api, Resource
 
 from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_required
 
-from models import db, User
+from models import db, User, Quote
 
 def is_admin():
     try:
@@ -113,8 +113,61 @@ class Authentication(Resource):
 
     def delete(self): # logout
         # Deletes the user
-        return jsonify({"message": "DELETE Registration"})
+        return {"message": "DELETE Registration"}
+
+class Quotes(Resource):
+
+    @jwt_required()
+    def get(self, quote_id=None):
+        if quote_id:
+            quote = Quote.query.get(quote_id)
+            if not quote:
+                return {"message": "Quote not found"}, 404
+            return {"message": "Quote found", "quote": quote.to_dict()}
+        quotes = Quote.query.all()
+        quotes = [quote.to_dict() for quote in quotes]
+        return {"message": "GET Quotes", "quotes": quotes}
+    
+    @jwt_required()
+    @admin_required
+    def post(self, quote_id=None):
+        text = request.json.get('text', "No text provided")
+        quote = Quote(text=text)
+        db.session.add(quote)
+        db.session.commit()
+        return {"message": "Quote created", "quote": quote.to_dict()}
+    
+    @jwt_required()
+    @admin_required
+    def put(self, quote_id=None):
+        if not quote_id:
+            return {"message": "Quote ID is required to update a quote"}, 400
+        quote = Quote.query.get(quote_id)
+        if not quote:
+            return {"message": "Quote not found with given id"}, 404
+        text = request.json.get('text', "No text provided")
+        quote.text = text
+        db.session.commit()
+        return {"message": "Quote updated", "quote": quote.to_dict()}
+    
+    @jwt_required()
+    @admin_required
+    def delete(self, quote_id=None):
+        if not quote_id:
+            return {"message": "Quote ID is required to delete a quote"}, 400
+        quote = Quote.query.get(quote_id)
+        if not quote:
+            return {"message": "Quote not found with given id"}, 404
+        db.session.delete(quote)
+        db.session.commit()
+        return {"message": "Quote deleted"}, 200
 
 
 
+
+class ExportCSV(Resource):
+    def get(self):
+        from celery_app import export_csv
+        task = export_csv.delay()
+        return {"message": "CSV export initiated"}, 200
 

@@ -22,11 +22,13 @@ from models import db, User
 db.init_app(app)
 
 # add the api routes
-from controllers import Api, Authentication, Users
+from controllers import Api, Authentication, Users, Quotes, ExportCSV
 api = Api(app)
 
 api.add_resource(Authentication, '/api/auth')
 api.add_resource(Users, '/api/users', '/api/users/<int:user_id>')
+api.add_resource(Quotes, '/api/quotes', '/api/quotes/<int:quote_id>')
+api.add_resource(ExportCSV, '/api/export_csv')
 
 
 # running the application
